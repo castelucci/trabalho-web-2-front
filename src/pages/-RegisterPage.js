@@ -8,6 +8,8 @@ import {
   CardFooter,
   CardImg,
   CardTitle,
+  Label,
+  FormGroup,
   Form,
   Input,
   InputGroupAddon,
@@ -19,18 +21,18 @@ import {
 } from "reactstrap";
 
 import api from "../services/api"
-
-
-class Login extends React.Component {
+class Signup extends React.Component {
   state = {
     squares1to6: "",
     squares7and8: "",
+    token:"",
+    adm:false
   };
   componentDidMount() {
     document.body.classList.toggle("register-page");
     document.documentElement.addEventListener("mousemove", this.followCursor);
   }
-  componentWillUnmount() {   
+  componentWillUnmount() {
     document.body.classList.toggle("register-page");
     document.documentElement.removeEventListener(
       "mousemove",
@@ -56,25 +58,49 @@ class Login extends React.Component {
     });
   };
 
-  logar = async ()=>{//this.setState({mensagem:
-      await api.post('aut',{email:this.state.email,
-        senha:this.state.senha}).then(
-      (response) =>{localStorage.setItem("token",response.data.token)
-      this.props.history.push("/home")}).catch((error)=> {
-        if (new RegExp("email").test(error.response.data.error.toLowerCase())) {
-         this.setState({inputEmail:"has-danger"})
-        }
-        if (new RegExp("senha").test(error.response.data.error.toLowerCase())) {
-          this.setState({inputEmail:"has-success"})
+  
+  cadastrar = async ()=>{//this.setState({mensagem:
+    await api.post('user',{email:this.state.email,
+      senha:this.state.senha,nome:this.state.nome,adm:this.state.adm},
+      {headers: {Authorization: 'Bearer '+localStorage.getItem('token')}}).then(
+    (response) =>{this.setState({corP:"text-success"})
+    this.setState({mensagem:"Novo Usuario Criado"})
+    this.setState({inputEmail:"has-success"})
+    this.setState({inputNome:"has-success"})
+    this.setState({inputSenha:"has-success"})
+    }).catch((error)=>{this.setState({corP:"text-danger"})
+      if (error.response.data) {
+        this.setState({inputEmail:"has-success"})
+        this.setState({inputNome:"has-success"})
+        this.setState({inputSenha:"has-success"})
+        if (new RegExp("email").test(error.response.data.toLowerCase())) {
+          this.setState({inputEmail:"has-danger"})
+         }
+          if (new RegExp("nome").test(error.response.data.toLowerCase())) {
+           this.setState({inputNome:"has-danger"})
+         }
+         if (new RegExp("senha").test(error.response.data.toLowerCase())) {
           this.setState({inputSenha:"has-danger"})
-        }
-        console.log();
-        
-       
-        this.setState({mensagem:error.response.data.error})
-      })
+         }   
+        this.setState({mensagem:error.response.data})
+        return
+      }
+    
+      if (new RegExp("email").test(error.response.data.error.toLowerCase())) {
+       this.setState({inputEmail:"has-danger"})
+      }
+       if (new RegExp("nome").test(error.response.data.error.toLowerCase())) {
+        this.setState({inputEmail:"has-success"})
+        this.setState({inputNome:"has-danger"})
+      }
+      if (new RegExp("senha").test(error.response.data.error.toLowerCase())) {
+        this.setState({inputEmail:"has-success"})
+        this.setState({inputNome:"has-success"})
+        this.setState({inputSenha:"has-danger"})
+      }   
+      this.setState({mensagem:error.response.data.error})   
+    })
   }
-
   render() {
     return (
       <div className="wrapper">
@@ -100,10 +126,32 @@ class Login extends React.Component {
                           alt="..."
                           src={require("assets/img/square-purple-1.png")}
                         />
-                        <CardTitle tag="h4">Logar</CardTitle>
+                        <CardTitle tag="h4">Regitrar</CardTitle>
                       </CardHeader>
                       <CardBody>
                         <Form className="form">
+                          <InputGroup
+                            className={classnames({
+                              "input-group-focus": this.state.fullNameFocus
+                            }),this.state.inputNome}
+                          >
+                            <InputGroupAddon addonType="prepend">
+                              <InputGroupText>
+                                <i className="tim-icons icon-single-02" />
+                              </InputGroupText>
+                            </InputGroupAddon>
+                            <Input
+                              placeholder="Nome Completo"
+                              type="text"
+                              onFocus={e =>
+                                this.setState({ fullNameFocus: true })
+                              }
+                              onBlur={e =>
+                                this.setState({ fullNameFocus: false })
+                              }
+                              onInput={(e) => this.setState({nome: e.target.value})}
+                            />
+                          </InputGroup>
                           <InputGroup
                             className={classnames({
                               "input-group-focus": this.state.emailFocus
@@ -134,19 +182,31 @@ class Login extends React.Component {
                             </InputGroupAddon>
                             <Input
                               placeholder="Senha"
-                              type="password"
-                              onFocus={e =>this.setState({ passwordFocus: true })}
-                              onBlur={e =>this.setState({ passwordFocus: false })}
+                              type="text"
+                              onFocus={e =>
+                                this.setState({ passwordFocus: true })
+                              }
+                              onBlur={e =>
+                                this.setState({ passwordFocus: false })
+                              }
                               onInput={(e) => this.setState({senha: e.target.value})}
+                            
                             />
                           </InputGroup>
-                            <p className="text-danger">{this.state.mensagem}</p>
-                          
+                          <FormGroup check className="text-left">
+                            <Label check>
+                              <Input type="checkbox" 
+                              onInput={(e) => this.setState({adm: true})}
+                              />
+                              <span className="form-check-sign" />Usuario Administrador{" "}
+                            </Label>
+                            </FormGroup>
+                          <p className={this.state.corP}>{this.state.mensagem}</p>
                         </Form>
                       </CardBody>
                       <CardFooter>
-                        <Button onClick={this.logar} className="btn-round" color="primary" size="lg">
-                          Get Started
+                        <Button onClick={this.cadastrar} className="btn-round" color="primary" size="lg">
+                          Criar
                         </Button>
                       </CardFooter>
                     </Card>
@@ -191,4 +251,4 @@ class Login extends React.Component {
   }
 }
 
-export default Login;
+export default Signup;

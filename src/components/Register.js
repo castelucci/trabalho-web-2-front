@@ -15,58 +15,13 @@ import {
   InputGroupAddon,
   InputGroupText,
   InputGroup,
-  Container,
-  Row,
-  Col
 } from "reactstrap";
-
-import {estaAutenticado} from "../auth"
 import api from "../services/api"
 class Signup extends React.Component {
+
   state = {
-    squares1to6: "",
-    squares7and8: "",
     token:"",
     adm:false
-  };
-  componentWillMount(){this.teste()}
-
-  teste= async()=>{
-    if (!(await estaAutenticado())) {
-      this.props.history.push("/")
-    }
-  }
-
-  componentDidMount() {
-    console.log("componentDidMount");
-    
-    document.body.classList.toggle("register-page");
-    document.documentElement.addEventListener("mousemove", this.followCursor);
-  }
-  componentWillUnmount() {
-    document.body.classList.toggle("register-page");
-    document.documentElement.removeEventListener(
-      "mousemove",
-      this.followCursor
-    );
-  }
-  followCursor = event => {
-    let posX = event.clientX - window.innerWidth / 2;
-    let posY = event.clientY - window.innerWidth / 6;
-    this.setState({
-      squares1to6:
-        "perspective(500px) rotateY(" +
-        posX * 0.05 +
-        "deg) rotateX(" +
-        posY * -0.05 +
-        "deg)",
-      squares7and8:
-        "perspective(500px) rotateY(" +
-        posX * 0.02 +
-        "deg) rotateX(" +
-        posY * -0.02 +
-        "deg)"
-    });
   };
   alterar = async (vetor,campo,erro)=>{
     if (erro) {
@@ -82,7 +37,8 @@ class Signup extends React.Component {
         console.log(element);
     })
   }
-  cadastrar = async ()=>{
+  cadastrar = async ()=>{ console.log(localStorage.getItem('token'));
+  
     await api.post('user',{email:this.state.email,
       senha:this.state.senha,nome:this.state.nome,adm:this.state.adm},
       {headers: {Authorization: 'Bearer '+localStorage.getItem('token')}})
@@ -90,43 +46,24 @@ class Signup extends React.Component {
     this.setState({corP:"text-success",mensagem:"Novo Usuario Criado"})
     this.alterar(["Nome","Email","Senha"],"input")
     })
-    .catch((error)=>{ 
+    .catch((error)=>{ console.log(error);
+    
     this.setState({corP:"text-danger"});
     let erro;
     error.response.data? erro = error.response.data.toLowerCase():
     erro = error.response.data.error.toLowerCase()
-
     this.alterar(["Nome","Email","Senha"],"input",erro)
-
     this.setState({mensagem:erro})   
     })
   }
   render() {
-    return (
-      <div className="wrapper">
-          <div className="page-header">
-            <div className="page-header-image" />
-            <div className="content">
-            <Container>
-                <Row>
-                  <Col className="offset-lg-0 offset-md-3" lg="5" md="6">
-                    <div
-                      className="square square-7"
-                      id="square7"
-                      style={{ transform: this.state.squares7and8 }}
-                    />
-                    <div
-                      className="square square-8"
-                      id="square8"
-                      style={{ transform: this.state.squares7and8 }}
-                    />
-                    <Card className="card-register">
+    return (               
+           <Card style={{margin:0}} className="card-register">
                       <CardHeader>
                         <CardImg
-                          alt="..."
-                          src={require("assets/img/square-purple-1.png")}
+                          src={require("assets/img/square1.png")}
                         />
-                        <CardTitle tag="h4">Regitrar</CardTitle>
+                        <CardTitle tag="h1">Regitrar</CardTitle>
                       </CardHeader>
                       <CardBody>
                         <Form className="form">
@@ -206,48 +143,14 @@ class Signup extends React.Component {
                         </Form>
                       </CardBody>
                       <CardFooter>
-                        <Button onClick={this.cadastrar} className="btn-round" color="primary" size="lg">
+                        <Button onClick={this.cadastrar} className="btn-round animation-on-hover" color="info" size="lg">
                           Criar
+                        </Button>
+                        <Button onClick={this.props.toggleModalRegister} className="btn-round" color="danger">
+                          Cancelar
                         </Button>
                       </CardFooter>
                     </Card>
-                  </Col>
-                </Row>
-                {/*<div className="register-bg" />*/}
-                <div
-                  className="square square-1"
-                  id="square1"
-                  style={{ transform: this.state.squares1to6 }}
-                />
-                <div
-                  className="square square-2"
-                  id="square2"
-                  style={{ transform: this.state.squares1to6 }}
-                />
-                <div
-                  className="square square-3"
-                  id="square3"
-                  style={{ transform: this.state.squares1to6 }}
-                />
-                <div
-                  className="square square-4"
-                  id="square4"
-                  style={{ transform: this.state.squares1to6 }}
-                />
-                <div
-                  className="square square-5"
-                  id="square5"
-                  style={{ transform: this.state.squares1to6 }}
-                />
-                <div
-                  className="square square-6"
-                  id="square6"
-                  style={{ transform: this.state.squares1to6 }}
-                />
-              </Container>
-        </div>
-          </div>
-        </div>
     );
   }
 }
