@@ -130,9 +130,9 @@ class ComponentsNavbar extends React.Component {
                       Menu
                     </DropdownToggle>
                     <DropdownMenu className="dropdown-black">
-                      <DropdownItem tag={Link} to="/register-page">
+                      <DropdownItem tag={Link} to="/cesta">
                         <i className="tim-icons icon-bullet-list-67" />
-                        Register Page
+                        Cadastrar Cesta
                       </DropdownItem>
                     </DropdownMenu>
                   </UncontrolledDropdown>

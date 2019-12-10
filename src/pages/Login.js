@@ -60,6 +60,9 @@ class Login extends React.Component {
       await api.post('aut',{email:this.state.email,
         senha:this.state.senha}).then(
       (response) =>{localStorage.setItem("token",response.data.token)
+      
+      localStorage.setItem("user",JSON.stringify(response.data.user))
+      console.log(localStorage.getItem('user'));
       this.props.history.push("/home")}).catch((error)=> {
         if (new RegExp("email").test(error.response.data.error.toLowerCase())) {
          this.setState({inputEmail:"has-danger"})
@@ -116,7 +119,7 @@ class Login extends React.Component {
                             </InputGroupAddon>
                             <Input
                               placeholder="Email"
-                              type="text"
+                              type="email"
                               onFocus={e => this.setState({ emailFocus: true })}
                               onBlur={e => this.setState({ emailFocus: false })}
                               onInput={(e) => this.setState({email: e.target.value})}
