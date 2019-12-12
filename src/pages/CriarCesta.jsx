@@ -1,29 +1,12 @@
 import React from "react";
-import classnames from "classnames";
-import PerfectScrollbar from "perfect-scrollbar";
 import {
   Button,
   Card,
-  CardHeader,
   CardBody,
-  /*
-  NavLink,*/
   Label,
   FormGroup,
-  Form,
   Input,
-  FormText,
-  Nav,
-  Table,
-  /* TabContent,
-  TabPane,*/
-  Row,
-  Container,/*
-  Col,
-  UncontrolledTooltip,
-  UncontrolledCarousel*/
-  NavItem,
-  UncontrolledDropdown, DropdownToggle, DropdownMenu, DropdownItem
+  Container,
 } from "reactstrap";
 import { estaAutenticado } from "../auth"
 import api from "../services/api"
@@ -154,7 +137,7 @@ class CriarCesta extends React.Component {
         }
       },
       mes: "Janeiro"
-    },
+    }, mensagem: "",
     alimentos: ["Carne", "Leite", "Feijão", "Arroz", "Farinha", "Batata", "Legumes (Tomate)", "Pão Francês", "Café em pó", "Frutas (Banana)", "Açucar", "Banha/Óleo", "Manteiga"]
   };
   componentWillMount() { this.teste() }
@@ -179,8 +162,9 @@ class CriarCesta extends React.Component {
             cotacao.cesta.alimentos["alimento" + (params + 1)].variedade[i].marca = e.target.value
             this.setState({ cotacao })
           }} />
-        <Input className="col-md-5" type="text" style={{ margin: 10 }} placeholder="Preço (Com '.' se necessário)"
+        <Input className="col-md-5" type="text" onkeypress='return event.charCode >= 48 && event.charCode <= 57' style={{ margin: 10 }} placeholder="Preço (Com '.' se necessário)"
           onInput={(e) => {
+            e.target.value = e.target.value.normalize('NFD').replace(/([\u0300-\u036f]|[^0-9])/g, '')
             let cotacao = this.state.cotacao;
             cotacao.cesta.alimentos["alimento" + (params + 1)].variedade[i].preco = e.target.value
             this.setState({ cotacao })
@@ -190,13 +174,23 @@ class CriarCesta extends React.Component {
     }
     return rows
   }
-  logar = () => {
-    console.log(this.state.cotacao);
-
+  criar = async () => {
+    let valido = false
+    Object.keys(this.state.cotacao.cesta.alimentos).filter(i => (
+      this.state.cotacao.cesta.alimentos[i].variedade.filter(i => (
+        i.marca != "" && i.preco != 0 ? valido = true : false
+      ))
+    ))
+    if (valido) {
+      await api.post('user', this.state.cotacao,
+        { headers: { Authorization: 'Bearer ' + localStorage.getItem('token') } })
+        .then((response) => { this.props.history.push("/home") })
+        .catch((error) => { })
+    } else { this.setState({ mensagem: "É necessario pelo menos preencher uma marca com seu respectivo preço" }) }
   }
   alimentos = () => (
     <>
-      {this.state.alimentos.map((a, index) => (<FormGroup><Label>{a}</Label>{this.rows(index)}</FormGroup>))}
+      {this.state.alimentos.map((a, index) => (<FormGroup><Label style={{ border: 3 }} >{a}</Label>{this.rows(index)}</FormGroup>))}
     </>
   )
 
@@ -210,8 +204,8 @@ class CriarCesta extends React.Component {
                 <form>
                   {this.alimentos()}
                   <div className="form-row justify-content-center">
-                    <Label for="inputState">Mes de Referencia</Label>
-                    <Input className="text-muted" type="select" onInput={(e) => this.setState({ cotacao: { ...this.state.cotacao,mes: e.target.value} })}>
+                    <Label>Mes de Referencia</Label>
+                    <Input className="text-muted" type="select" onInput={(e) => this.setState({ cotacao: { ...this.state.cotacao, mes: e.target.value } })}>
                       <option >Janeiro</option>
                       <option>Fevereiro</option>
                       <option>Março</option>
@@ -225,9 +219,10 @@ class CriarCesta extends React.Component {
                       <option>Novembro</option>
                       <option>Dezembro</option>
                     </Input>
-                    <Button onClick={this.logar} color="primary">Sign in</Button>
+                    <Button onClick={this.criar} color="primary">Criar</Button>
                   </div>
                 </form>
+                <Label className="text-danger">{this.state.mensagem}</Label>
               </CardBody>
             </Card>
           </Container>

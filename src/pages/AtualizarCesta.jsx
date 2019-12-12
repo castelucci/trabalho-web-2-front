@@ -1,29 +1,12 @@
 import React from "react";
-import classnames from "classnames";
-import PerfectScrollbar from "perfect-scrollbar";
 import {
   Button,
   Card,
-  CardHeader,
   CardBody,
-  /*
-  NavLink,*/
   Label,
   FormGroup,
-  Form,
   Input,
-  FormText,
-  Nav,
-  Table,
-  /* TabContent,
-  TabPane,*/
-  Row,
-  Container,/*
-  Col,
-  UncontrolledTooltip,
-  UncontrolledCarousel*/
-  NavItem,
-  UncontrolledDropdown, DropdownToggle, DropdownMenu, DropdownItem
+  Container,
 } from "reactstrap";
 import { estaAutenticado } from "../auth"
 import api from "../services/api"
@@ -155,11 +138,12 @@ class AtualizarCesta extends React.Component {
       },
       mes: ""
     },
-    color:"primary",
-    mensagem:"",
-    colorMensagem:""
+    copy: {},
+    color: "primary",
+    mensagem: "",
+    colorMensagem: ""
   };
-  componentWillMount() { this.teste()}
+  async componentWillMount() { this.teste() }
 
   async componentDidMount() {
     this.setState({ cotacao: JSON.parse(await localStorage.getItem('item')) })
@@ -171,44 +155,51 @@ class AtualizarCesta extends React.Component {
       this.props.history.push("/")
     }
   }
+  e = (params, campo, i, e) => {
+    let cotacao = this.state.cotacao;
+    this.setState({ color: "primary", mensagem: "Cotação Precisa Ser Salva", colorMensagem: "text-info" })
+    cotacao.cesta.alimentos[params].variedade[i][campo] = parseFloat(e.target.value)
+    this.setState({ cotacao })
+    if (!e.target.value) { e.target.value = e.target.placeholder }
+    return e
+  }
   rows = (params) => {
     let rows = []
     for (let i = 0; i < 5; i++) {
       rows.push(<div className="form-row justify-content-center">
         <Input className="col-md-6" type="text" style={{ margin: 10 }} placeholder={this.state.cotacao.cesta.alimentos[params].variedade[i].marca}
-          onInput={(e) => { this.setState({color:"primary",mensagem:"Cotação Precisa Ser Salva",colorMensagem:"text-info"})
-            let cotacao = this.state.cotacao;
-            cotacao.cesta.alimentos[params].variedade[i].marca = e.target.value
-            this.setState({ cotacao })
+          onInput={(e) => {
+            e = this.e(params, "preco", i, e);
           }} />
         <Input className="col-md-5" type="text" style={{ margin: 10 }} placeholder={this.state.cotacao.cesta.alimentos[params].variedade[i].preco}
-          onInput={(e) => {this.setState({color:"primary",mensagem:"Cotação Precisa Ser Salva",colorMensagem:"text-info"})
-            let cotacao = this.state.cotacao;
-            cotacao.cesta.alimentos[params].variedade[i].preco = parseFloat(e.target.value)
-            this.setState({ cotacao })
-          }} />
+          onInput={(e) => { e.target.value = e.target.value.normalize('NFD').replace(/([^0-9.])/g, ""); e = this.e(params, "preco", i, e) }} />
       </div>
       )
     }
     return rows
   }
- Atualizar = async () => {
-    await api.put('Cotacao/'+this.state.cotacao._id,this.state.cotacao,
-      {headers: {Authorization: 'Bearer '+localStorage.getItem('token')}})
-    .then((response) =>{
-      console.log(response);
-      
-        this.setState({color:"success",colorMensagem:"text-success",mensagem:"Cotação atualizada"})
-    })
-    .catch((error)=>{ let erro;
-    error.response.data? erro = error.response.data.toLowerCase():
-    erro = error.response.data.error.toLowerCase()
-    this.setState({mensagem:erro})   
-    })}
+  Atualizar = async () => {
+    if (JSON.stringify(this.state.cotacao) === await localStorage.getItem('item')) {
+
+      this.setState({ mensagem: "É necessario alterar quaisquer uns dos campos para fazer a atualização", colorMensagem: "text-danger" })
+      return
+    }
+    await api.put('Cotacao/' + this.state.cotacao._id, this.state.cotacao,
+      { headers: { Authorization: 'Bearer ' + localStorage.getItem('token') } })
+      .then((response) => {
+        this.setState({ color: "success", colorMensagem: "text-success", mensagem: "Cotação atualizada" })
+      })
+      .catch((error) => {
+        let erro;
+        error.response.data ? erro = error.response.data.toLowerCase() :
+          erro = error.response.data.error.toLowerCase()
+        this.setState({ mensagem: erro })
+      })
+  }
   alimentos = () => (
     <>
       {Object.keys(this.state.cotacao.cesta.alimentos).map(a => (<FormGroup><Label>{this.state.cotacao.cesta.alimentos[a].nome}</Label>
-      {this.rows(a)}</FormGroup>))}
+        {this.rows(a)}</FormGroup>))}
     </>
   )
 
@@ -223,7 +214,10 @@ class AtualizarCesta extends React.Component {
                   {this.alimentos()}
                   <div className="form-row justify-content-center">
                     <Label>Mes de Referencia</Label>
-                    <Input className="text-muted" value={this.state.cotacao.mes} type="select" onInput={(e) => this.setState({ cotacao: { ...this.state.cotacao,mes: e.target.value} })}>
+                    <Input className="text-muted" value={this.state.cotacao.mes} type="select" onInput={(e) => this.setState({
+                      cotacao: { ...this.state.cotacao, mes: e.target.value }, color: "primary", mensagem: "Cotação Precisa Ser Salva",
+                      colorMensagem: "text-info"
+                    })}>
                       <option >Janeiro</option>
                       <option>Fevereiro</option>
                       <option>Março</option>
